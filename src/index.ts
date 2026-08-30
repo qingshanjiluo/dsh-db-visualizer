@@ -38,26 +38,34 @@ interface Connection {
 
 let currentConnection: Connection | null = null
 
+function sanitize(s: string): string {
+  return s.replace(/[;&|`$(){}[\]!#~<>'"]/g, '');
+}
+
 function buildPsqlCommand(conn: Connection, sql: string): string {
-  const envVars = `PGPASSWORD="${conn.password}"`
-  return `${envVars} psql -h ${conn.host} -p ${conn.port} -U ${conn.user} -d ${conn.database} -t -A -c "${sql.replace(/"/g, '\\"')}"`
+  const envVars = `PGPASSWORD="${sanitize(conn.password)}"`
+  return `${envVars} psql -h ${sanitize(conn.host)} -p ${conn.port} -U ${sanitize(conn.user)} -d ${sanitize(conn.database)} -t -A -c "${sanitize(sql)}"`
 }
 
 function buildMysqlCommand(conn: Connection, sql: string): string {
-  return `mysql -h ${conn.host} -P ${conn.port} -u ${conn.user} -p"${conn.password}" ${conn.database} -e "${sql.replace(/"/g, '\\"')}"`
+  return `mysql -h ${sanitize(conn.host)} -P ${conn.port} -u ${sanitize(conn.user)} -p"${sanitize(conn.password)}" ${sanitize(conn.database)} -e "${sanitize(sql)}"`
 }
 
 function executeQuery(conn: Connection, sql: string): string {
-  if (conn.type === 'sqlite') {
-    return execSync(`sqlite3 "${conn.database}" "${sql.replace(/"/g, '\\"')}"`, { encoding: 'utf-8' })
+  try {
+    if (conn.type === 'sqlite') {
+      return execSync(`sqlite3 "${sanitize(conn.database)}" "${sanitize(sql)}"`, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] })
+    }
+    if (conn.type === 'postgres') {
+      return execSync(buildPsqlCommand(conn, sql), { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] })
+    }
+    if (conn.type === 'mysql') {
+      return execSync(buildMysqlCommand(conn, sql), { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] })
+    }
+    throw new Error(`不支持的数据库类型: ${conn.type}`)
+  } catch (err: any) {
+    throw new Error(err.stderr || err.message || '查询执行失败');
   }
-  if (conn.type === 'postgres') {
-    return execSync(buildPsqlCommand(conn, sql), { encoding: 'utf-8' })
-  }
-  if (conn.type === 'mysql') {
-    return execSync(buildMysqlCommand(conn, sql), { encoding: 'utf-8' })
-  }
-  throw new Error(`Unsupported database type: ${conn.type}`)
 }
 
 export function apply(ctx: any) {
