@@ -1,0 +1,14 @@
+{
+  "name": "dsh-db-visualizer",
+  "version": "1.0.0",
+  "description": "DeepSeek Harness 数据库 Schema 可视化 — 连接、ER图、查询、分析",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": { ".": "./lib/index.js", "./client": "./lib/client.js", "./cordis.patch.yml": "./cordis.patch.yml", "./package.json": "./package.json" },
+  "scripts": { "build": "tsdown", "typecheck": "tsc --noEmit" },
+  "keywords": ["deepseek-harness", "dsh-plugin", "database", "schema", "visualizer", "sql"],
+  "license": "MIT",
+  "peerDependencies": { "@deepseek-ai/cordis": "*", "@deepseek-ai/dsh-tools": "*", "@deepseek-ai/dsh-client-runtime": "*", "@deepseek-ai/dsh-client-locale": "*", "@deepseek-ai/dsh-client-ui-settings": "*" },
+  "devDependencies": { "typescript": "^5.5.0", "tsdown": "^0.11.0" },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" }, "client": { "platform": "web", "inject": ["@deepseek-ai/dsh-client-runtime", "@deepseek-ai/dsh-client-locale", "@deepseek-ai/dsh-client-ui-settings"] } }
+}
