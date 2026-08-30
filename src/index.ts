@@ -1,3 +1,18 @@
+/**
+ * dsh-db-visualizer — 数据库Schema可视化
+ *
+ * 功能：
+ * 1. 连接数据库
+ * 2. 浏览Schema
+ * 3. 描述表结构
+ * 4. 执行查询
+ * 5. 生成ER图
+ * 6. 分析优化
+ *
+ * 工具：db_connect, db_schemas, db_describe, db_query, db_er_diagram, db_analyze
+ * 命令：/db
+ * 配置：enabled
+ */
 import { z } from 'zod'
 import { execSync } from 'node:child_process'
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
