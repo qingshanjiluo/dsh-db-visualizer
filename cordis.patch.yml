@@ -1,5 +1,9 @@
+# dsh-db-visualizer bundle layer: inserts the host tool plugin into a profile's
+# layer stack. Install with:
+#   npx -y @deepseek-ai/dsh plugin --profile web add @qingshanjiluo/dsh-db-visualizer
 - insert:
     - id: db-visualizer
-      name: dsh-db-visualizer
+      name: '@qingshanjiluo/dsh-db-visualizer'
       config:
-        enabled: true
+        maxTables: 64
+        reportNullable: true

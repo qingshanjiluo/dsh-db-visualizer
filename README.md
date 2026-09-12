@@ -1,43 +1,53 @@
 # dsh-db-visualizer
 
-> DeepSeek Harness 数据库 Schema 可视化
+DeepSeek Harness plugin: offline SQL DDL schema visualization and analysis.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Paste `CREATE TABLE` text (MySQL, PostgreSQL, or SQLite dialect) into the
+tools; they parse it in-process and return structure, a Mermaid ER diagram,
+and schema-hygiene findings. **No database connection, no subprocesses, no
+network** — every tool is a pure DDL text analysis.
 
-## ✨ 功能特性
-
-- 🔌 **数据库连接**: 支持 PostgreSQL、MySQL、SQLite
-- 📋 **Schema 浏览**: 列出所有表、行数、列信息
-- 🔍 **表结构**: 显示列、类型、约束、索引、外键
-- 📊 **SQL 查询**: 执行只读 SELECT 查询
-- 🗺️ **ER 图**: 生成 Mermaid 语法的实体关系图
-- 📈 **分析**: 表大小、索引使用、优化建议
-
-## 📦 安装
+## Install
 
 ```bash
-npm install dsh-db-visualizer
+npx -y @deepseek-ai/dsh plugin --profile web add @qingshanjiluo/dsh-db-visualizer
 ```
 
-## 🛠️ 工具
+## Tools
 
-| 工具名 | 描述 | 参数 |
-|--------|------|------|
-| `db_connect` | 连接数据库 | `type`, `host`, `port`, `database`, `user`, `password` |
-| `db_schemas` | 列出所有表 | 无 |
-| `db_describe` | 描述表结构 | `table` |
-| `db_query` | 执行只读查询 | `sql` |
-| `db_er_diagram` | 生成 ER 图 | 无 |
-| `db_analyze` | 数据库分析 | 无 |
+| Tool | Input | Output |
+|------|-------|--------|
+| `db_parse_schema` | `ddlText` — raw DDL script | Tables with columns (type, nullability, defaults, comments, ENUM/CHECK values), primary keys, indexes, and foreign keys (target, ON DELETE/UPDATE) |
+| `db_er_mermaid` | `ddlText` | Mermaid `erDiagram` source with typed attributes (PK/FK/UK) and FK-derived relationship lines, plus table/relation counts |
+| `db_analyze` | `ddlText` | Findings: `missing-index` on foreign keys (with a suggested `CREATE INDEX`), `missing-primary-key`, `nullable-fk-column`, `nullable-unique-column`, `nullable-without-default`, `dangling-fk` |
 
-## 📋 命令
+## Configuration
 
-- `/db connect` — 连接数据库
-- `/db schemas` — 列出表
-- `/db describe <table>` — 描述表
-- `/db query <sql>` — 执行查询
-- `/db er` — 生成 ER 图
+| Field | Type | Default | Meaning |
+|-------|------|---------|---------|
+| `includeComments` | boolean | `true` | Expose `COMMENT` text declared in the DDL |
+| `indexNamePrefix` | string | `idx` | Prefix for index names suggested by `db_analyze` |
 
-## 📄 License
+## Parsing notes
+
+The parser is string-aware and line/regex based: it understands quoted
+identifiers (`` `x` ``, `"x"`, `[x]`), schema-qualified names, inline and
+table-level `PRIMARY KEY` / `UNIQUE` / `FOREIGN KEY ... REFERENCES` /
+`KEY|INDEX` items, `ENUM('...')` and `CHECK (col IN (...))` value sets, and
+`COMMENT=` / `COMMENT ON TABLE|COLUMN` comments. `CREATE TABLE ... AS SELECT`
+is skipped; structural problems are reported in the `errors` array instead of
+throwing.
+
+## Development
+
+```bash
+npm install
+npm run typecheck   # tsc --noEmit
+npm run build       # tsc + tsdown → lib/
+npx vitest run      # behavior tests
+node scripts/load-smoke.mjs   # loads lib/index.js, asserts the tool face
+```
+
+## License
 
 MIT
